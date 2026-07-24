@@ -7,12 +7,21 @@ from groq import Groq
 
 app = Flask(__name__)
 
-# Environment Variables orqali olish
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
+# Telegram va Groq sozlamalari
 application = Application.builder().token(TOKEN).build()
 groq_client = Groq(api_key=GROQ_API_KEY)
+
+# Global flag (app bir marta ishga tushishi uchun)
+_initialized = False
+
+async def initialize_application():
+    global _initialized
+    if not _initialized:
+        await application.initialize()
+        _initialized = True
 
 async def start(update: Update, context):
     await update.message.reply_text("Assalomu alaykum! Bot ishlayapti.")
@@ -32,13 +41,18 @@ application.add_handler(CommandHandler("start", start))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
 @app.route("/", methods=["POST", "GET"])
-async def webhook():
+def webhook():
     if request.method == "POST":
         try:
-            update = Update.de_json(request.get_json(force=True), application.bot)
-            await application.initialize()
-            await application.process_update(update)
-            await application.shutdown()
+            json_data = request.get_json(force=True)
+            
+            # Asinxron funksiyani Flask ichida to'g'ri bajarish
+            async def process():
+                await initialize_application()
+                update = Update.de_json(json_data, application.bot)
+                await application.process_update(update)
+
+            asyncio.run(process())
             return "OK", 200
         except Exception as e:
             print(e)
