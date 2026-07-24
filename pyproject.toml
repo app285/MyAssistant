@@ -1,2 +1,7 @@
+[project]
+name = "telegram-bot"
+version = "0.1.0"
+requires-python = ">=3.8"
+
 [tool.vercel]
 entrypoint = "api.bot:app"
