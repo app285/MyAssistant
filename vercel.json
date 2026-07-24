@@ -1,12 +1,14 @@
 {
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/api/bot.py" }
-  ],
-  "buildCommand": "pip install -r requirements.txt",
-  "functions": {
-    "api/bot.py": {
-      "runtime": "python"
+  "builds": [
+    {
+      "src": "api/bot.py",
+      "use": "@vercel/python"
     }
-  }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "destination": "api/bot.py"
+    }
+  ]
 }
-flask
